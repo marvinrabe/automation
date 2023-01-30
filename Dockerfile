@@ -11,7 +11,7 @@ RUN composer install \
   --no-dev \
   --no-interaction \
   --no-scripts \
-  --no-autoloader
+  --optimize-autoloader
 
 FROM node:lts AS node
 WORKDIR /var/www/html
@@ -22,11 +22,11 @@ RUN npm ci
 
 # Build application files
 COPY . .
-RUN npm run production
+RUN npm run build
 
 FROM php:${php}-fpm-buster AS php
 
-RUN apt-get update && apt-get --yes install ca-certificates curl nginx supervisor
+RUN apt-get update && apt-get --yes install supervisor
 
 # Install PHP extensions
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
@@ -60,4 +60,4 @@ EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-HEALTHCHECK --timeout=10s CMD curl --silent --fail http://127.0.0.1:8080/fpm-ping
+HEALTHCHECK --start-period=5s --interval=2s --timeout=5s --retries=8 CMD php artisan octane:status || exit 1

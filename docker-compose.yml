@@ -1,0 +1,49 @@
+version: "3.7"
+
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: app-automation
+    container_name: app-automation
+    restart: unless-stopped
+    networks:
+      - app
+    ports:
+      - "8080:8080"
+    environment:
+      APP_KEY: 3FmFV4CnyFcjIXm136vSWqpssivDwhfp
+      APP_URL: http://localhost:8000
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_HOST: app-postgres
+      DB_PASSWORD: forge
+      REDIS_HOST: app-redis
+
+  postgres:
+    image: postgres:14
+    hostname: app-postgres
+    environment:
+      POSTGRES_USER: forge
+      POSTGRES_PASSWORD: forge
+      POSTGRES_DB: forge
+    volumes:
+      - app-postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app
+
+  redis:
+    image: redis:5
+    hostname: app-redis
+    restart: unless-stopped
+    networks:
+      - app
+
+networks:
+  app:
+    driver: bridge
+
+volumes:
+  app-postgres:

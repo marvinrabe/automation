@@ -1,24 +1,25 @@
 #!/bin/sh
 set -e
 
-composer dump-autoload
+container_mode=${CONTAINER_MODE:-app}
+echo "Container mode: $container_mode"
 
-echo 'clearing cache...' >&2
-php artisan cache:clear
-php artisan lighthouse:clear-cache
+initialStuff() {
+    php artisan optimize; \
+    php artisan package:discover --ansi; \
+    php artisan event:cache; \
+    php artisan config:cache; \
+    php artisan route:cache; \
+    php artisan view:cache; \
+    php artisan migrate --force
+}
 
-echo 'warming up cache...' >&2
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan lighthouse:cache
-
-echo 'migrating database...' >&2
-php artisan migrate --force
-php artisan schedule-monitor:sync
-
-if [ -z "$@" ]; then
-  exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+if [ "$1" != "" ]; then
+    exec "$@"
+elif [ "$container_mode" = "app" ]; then
+    initialStuff
+    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 else
-  exec PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $@
+    echo "Container mode mismatched."
+    exit 1
 fi
