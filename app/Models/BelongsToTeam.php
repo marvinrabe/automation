@@ -13,7 +13,7 @@ trait BelongsToTeam
         static::addGlobalScope(new TeamScope());
 
         static::creating(function ($model) {
-            $model->team_id = $model->team_id ?: Auth::user()?->currentTeam?->id;
+            $model->team_id = $model->team_id ?: Auth::user()?->currentTeam?->getKey();
         });
     }
 
@@ -22,6 +22,9 @@ trait BelongsToTeam
         $this->guarded[] = ['team_id'];
     }
 
+    /**
+     * @return BelongsTo<Team, self>
+     */
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);

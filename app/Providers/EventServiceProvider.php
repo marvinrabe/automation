@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Actions\DeleteIntegration;
+use App\Actions\RunIntegration;
+use App\Events\DisabledAutomation;
+use App\Events\EnabledAutomation;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -18,6 +22,12 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        EnabledAutomation::class => [
+            RunIntegration::class,
+        ],
+        DisabledAutomation::class => [
+            DeleteIntegration::class
+        ]
     ];
 
     /**
