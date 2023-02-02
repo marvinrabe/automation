@@ -1,0 +1,41 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: jsonplaceholder-user-source
+  annotations:
+    camel.apache.org/kamelet.support.level: "Stable"
+    camel.apache.org/kamelet.icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAHdElNRQfnAgIMNgp3j5t+AAAAAW9yTlQBz6J3mgAAADRJREFUKM9jYCAR/Gf4jyrACBVG5v9Hk0XXg2IeVcF/7DwmQvooV0AL96PJEBXUqHpIDV4A3G0N/zwA8TYAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjMtMDItMDJUMTI6NTQ6MTArMDA6MDCPtbC7AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIzLTAyLTAyVDEyOjU0OjEwKzAwOjAw/ugIBwAAAABJRU5ErkJggg=="
+    camel.apache.org/provider: "Dromedar"
+    camel.apache.org/kamelet.group: "JSONPlaceholder"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Get JSONPlaceholder users"
+    description: |-
+      Returns all users from the JSONPlaceholder /users endpoint.
+    type: object
+    properties:
+      period:
+        title: Period
+        description: "The interval (in milliseconds) to wait between producing the next message."
+        type: integer
+        default: 1000
+  types:
+    out:
+      mediaType: application/json
+  dependencies:
+    - "camel:jackson"
+    - "camel:http"
+    - "camel:timer"
+    - "camel:kamelet"
+  template:
+    from:
+      uri: "timer:tick"
+      parameters:
+        period: "{{period}}"
+      steps:
+        - to: "https://jsonplaceholder.typicode.com/users"
+        - marshal:
+            json: { }
+        - to: "kamelet:sink"
